@@ -145,13 +145,12 @@ func (client *Client) Post(url string, payload []byte) (map[string]interface{}, 
 }
 
 func (client *Client) Delete(url string, id string) error {
-	req, err := http.NewRequest("Delete", API_HOST + url + "/" + id, nil)
+	req, err := http.NewRequest("DELETE", API_HOST + url + "/" + id, nil)
 
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer " + client.accessToken)
 
 	httpClient := &http.Client{}
@@ -161,7 +160,7 @@ func (client *Client) Delete(url string, id string) error {
 		return err
 	}
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= 400 && resp.StatusCode != 404 {
 		return errors.New("Could not delete the resource " + id)
 	}
 

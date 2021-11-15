@@ -111,7 +111,23 @@ func (r resourceKeyPair) Update(ctx context.Context, req tfsdk.UpdateResourceReq
 
 // Delete resource
 func (r resourceKeyPair) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-    resp.Diagnostics.AddError("Delete KeyPair", "Not implemented")
+    var key KeyPair
+
+    diags := req.State.Get(ctx, &key)
+    resp.Diagnostics.Append(diags...)
+
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    id := key.Id.Value
+
+    if err := r.p.client.DeleteKeyPair(id) ; err != nil {
+        resp.Diagnostics.AddError("Delete KeyPair", err.Error())
+        return
+    }
+
+    resp.State.RemoveResource(ctx)
 }
 
 func (client *Client) CreateKeyPair(key KeyPair) (string, error) {
@@ -141,4 +157,8 @@ func (client *Client) GetKeyPair(id string) (*KeyPair, error) {
     }
 
     return &key, nil
+}
+
+func (client *Client) DeleteKeyPair(id string) error {
+    return client.Delete(API_KEYPAIRS, id)
 }
