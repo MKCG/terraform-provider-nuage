@@ -114,7 +114,23 @@ func (r resourceProject) Update(ctx context.Context, req tfsdk.UpdateResourceReq
 
 // Delete resource
 func (r resourceProject) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-    resp.Diagnostics.AddError("Delete project", "Not implemented")
+    var project Project
+
+    diags := req.State.Get(ctx, &project)
+    resp.Diagnostics.Append(diags...)
+
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    id := project.Id.Value
+
+    if err := r.p.client.DeleteProject(id) ; err != nil {
+        resp.Diagnostics.AddError("Delete Project", err.Error())
+        return
+    }
+
+    resp.State.RemoveResource(ctx)
 }
 
 func (client *Client) CreateProject(project Project) (string, error) {

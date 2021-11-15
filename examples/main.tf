@@ -29,10 +29,10 @@ resource "nuage_project" "project-bis" {
   name = "infra00000000001"
 }
 
-resource "nuage_project" "project-ter" {
-  description = "projet infra"
-  name = "infra00000000002"
-}
+# resource "nuage_project" "project-ter" {
+#   description = "projet infra"
+#   name = "infra00000000002"
+# }
 
 
 # resource "nuage_security_rule" "sec-rule" {
