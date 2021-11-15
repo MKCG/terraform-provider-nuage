@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type Keypair struct {
+type KeyPair struct {
 	Id				types.String 	`tfsdk:"id"`
 	Description 	types.String 	`tfsdk:"description"`
 	IsDefault 		types.Bool 		`tfsdk:"is_default"`

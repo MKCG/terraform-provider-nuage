@@ -13,11 +13,11 @@ provider "nuage" {
   organization = var.nuage_auth_organization
 }
 
-# resource "nuage_keypair" "keypair" {
-#   description = "ssh key"
-#   public_key = "abc"
-#   user = "mkcg"  
-# }
+resource "nuage_keypair" "keypair" {
+  description = "ssh key"
+  public_key = file("~/.ssh/id_rsa.pub")
+  is_default = true
+}
 
 resource "nuage_project" "project" {
   description = "projet infra"
