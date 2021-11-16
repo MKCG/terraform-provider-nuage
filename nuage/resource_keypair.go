@@ -10,7 +10,10 @@ import (
 
 type resourceKeyPairType struct{}
 
-// Order Resource schema
+type resourceKeyPair struct {
+    p provider
+}
+
 func (r resourceKeyPairType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
     return tfsdk.Schema{
         Attributes: map[string]tfsdk.Attribute{
@@ -38,18 +41,12 @@ func (r resourceKeyPairType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
     }, nil
 }
 
-// New resource instance
 func (r resourceKeyPairType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
     return resourceKeyPair{
         p: *(p.(*provider)),
     }, nil
 }
 
-type resourceKeyPair struct {
-    p provider
-}
-
-// Create a new resource
 func (r resourceKeyPair) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
     var key KeyPair
 
@@ -67,7 +64,6 @@ func (r resourceKeyPair) Create(ctx context.Context, req tfsdk.CreateResourceReq
         return
     }
 
-    // Generate resource state struct
     var result = KeyPair{
         Id:             types.String{Value: id},
         Description:    types.String{Value: key.Description.Value},
@@ -80,7 +76,6 @@ func (r resourceKeyPair) Create(ctx context.Context, req tfsdk.CreateResourceReq
     resp.Diagnostics.Append(diags...)
 }
 
-// Read resource information
 func (r resourceKeyPair) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
     var key KeyPair
 
@@ -104,12 +99,10 @@ func (r resourceKeyPair) Read(ctx context.Context, req tfsdk.ReadResourceRequest
     resp.Diagnostics.Append(diags...)
 }
 
-// Update resource
 func (r resourceKeyPair) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
     resp.Diagnostics.AddError("Update KeyPair", "Not implemented")
 }
 
-// Delete resource
 func (r resourceKeyPair) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
     var key KeyPair
 

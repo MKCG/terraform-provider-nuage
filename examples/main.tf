@@ -51,7 +51,7 @@ resource "nuage_project" "project-bis" {
   name = "infra00000000001"
 }
 
-resource "nuage_server" "web" {
+resource "nuage_server" "prod-web-1" {
   description = "web server"
   name    = "prod-web-1"
   project = nuage_project.project.id
@@ -60,11 +60,23 @@ resource "nuage_server" "web" {
   keypair = nuage_keypair.keypair.id
 }
 
-# resource "nuage_project" "project-ter" {
-#   description = "projet infra"
-#   name = "infra00000000002"
-# }
+resource "nuage_server" "prod-web-2" {
+  description = "web server"
+  name    = "prod-web-2"
+  project = nuage_project.project.id
+  flavor  = data.nuage_flavor.web_flavor.id
+  image   = data.nuage_image.web_image.id
+  keypair = nuage_keypair.keypair.id
+}
 
+resource "nuage_server" "prod-db-1" {
+  description = "web server"
+  name    = "prod-db-1"
+  project = nuage_project.project.id
+  flavor  = data.nuage_flavor.db_flavor.id
+  image   = data.nuage_image.db_image.id
+  keypair = nuage_keypair.keypair.id
+}
 
 # resource "nuage_security_rule" "sec-rule" {
 #   direction = "in"

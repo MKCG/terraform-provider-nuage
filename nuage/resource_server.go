@@ -2,9 +2,7 @@ package nuage
 
 import (
     "context"
-    // "math/big"
-    // "strconv"
-    // "time"
+    "strings"
 
     "github.com/hashicorp/terraform-plugin-framework/diag"
     "github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -13,7 +11,10 @@ import (
 
 type resourceServerType struct{}
 
-// Order Resource schema
+type resourceServer struct {
+    p provider
+}
+
 func (r resourceServerType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
     return tfsdk.Schema{
         Attributes: map[string]tfsdk.Attribute{
@@ -55,18 +56,12 @@ func (r resourceServerType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
     }, nil
 }
 
-// New resource instance
 func (r resourceServerType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
     return resourceServer{
         p: *(p.(*provider)),
     }, nil
 }
 
-type resourceServer struct {
-    p provider
-}
-
-// Create a new resource
 func (r resourceServer) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
     var server Server
 
@@ -99,19 +94,57 @@ func (r resourceServer) Create(ctx context.Context, req tfsdk.CreateResourceRequ
     resp.Diagnostics.Append(diags...)
 }
 
-// Read resource information
 func (r resourceServer) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-    resp.Diagnostics.AddError("Read Server", "Not implemented")
+    var server Server
+
+    diags := req.State.Get(ctx, &server)
+    resp.Diagnostics.Append(diags...)
+
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    id := server.Id.Value
+
+    result, err := r.p.client.GetServer(id)
+
+    if err != nil {
+        resp.Diagnostics.AddError("Read Server", err.Error())
+        return
+    }
+
+    /**
+     * This is very ugly : the KeyPair can no longer be updated
+     * However there is no other way around since the KeyPair id is not returned by the Nuage API
+     */
+    result.KeyPair.Value = server.KeyPair.Value
+
+    diags = resp.State.Set(ctx, result)
+    resp.Diagnostics.Append(diags...)
 }
 
-// Update resource
 func (r resourceServer) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
     resp.Diagnostics.AddError("Update Server", "Not implemented")
 }
 
-// Delete resource
 func (r resourceServer) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-    resp.Diagnostics.AddError("Delete Server", "Not implemented")
+    var server Server
+
+    diags := req.State.Get(ctx, &server)
+    resp.Diagnostics.Append(diags...)
+
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    id := server.Id.Value
+
+    if err := r.p.client.DeleteServer(id) ; err != nil {
+        resp.Diagnostics.AddError("Delete Server", err.Error())
+        return
+    }
+
+    resp.State.RemoveResource(ctx)
 }
 
 func (client *Client) CreateServer(server Server) (string, error) {
@@ -125,4 +158,30 @@ func (client *Client) CreateServer(server Server) (string, error) {
     }
 
     return client.CreateResource(API_SERVERS, payload)
+}
+
+func (client *Client) GetServer(id string) (*Server, error) {
+    content, err := client.Get(API_SERVERS + "/" + id)
+
+    if err != nil {
+        return nil, err
+    }
+
+    project := strings.Replace(content["project"].(string), API_PROJECTS + "/", "", -1)
+
+    server := Server{
+        Id              : types.String{Value: content["id"].(string)},
+        Name            : types.String{Value: content["name"].(string)},
+        Description     : types.String{Value: content["description"].(string)},
+        Project         : types.String{Value: project},
+        Flavor          : types.String{Value: content["flavor"].(string)},
+        Image           : types.String{Value: content["image"].(string)},
+        // KeyPair         : types.String{Value: content["keypair"].(string)},
+    }
+
+    return &server, nil
+}
+
+func (client *Client) DeleteServer(id string) error {
+    return client.Delete(API_SERVERS, id)
 }

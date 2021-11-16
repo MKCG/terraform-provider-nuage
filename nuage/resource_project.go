@@ -11,7 +11,10 @@ import (
 
 type resourceProjectType struct{}
 
-// Order Resource schema
+type resourceProject struct {
+    p provider
+}
+
 func (r resourceProjectType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
     return tfsdk.Schema{
         Attributes: map[string]tfsdk.Attribute{
@@ -35,18 +38,12 @@ func (r resourceProjectType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
     }, nil
 }
 
-// New resource instance
 func (r resourceProjectType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
     return resourceProject{
         p: *(p.(*provider)),
     }, nil
 }
 
-type resourceProject struct {
-    p provider
-}
-
-// Create a new resource
 func (r resourceProject) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
     var project Project
 
@@ -71,7 +68,6 @@ func (r resourceProject) Create(ctx context.Context, req tfsdk.CreateResourceReq
         return
     }
 
-    // Generate resource state struct
     var result = Project{
         Id:             types.String{Value: id},
         Name:           types.String{Value: project.Name.Value},
@@ -83,7 +79,6 @@ func (r resourceProject) Create(ctx context.Context, req tfsdk.CreateResourceReq
     resp.Diagnostics.Append(diags...)
 }
 
-// Read resource information
 func (r resourceProject) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
     var project Project
 
@@ -107,12 +102,10 @@ func (r resourceProject) Read(ctx context.Context, req tfsdk.ReadResourceRequest
     resp.Diagnostics.Append(diags...)
 }
 
-// Update resource
 func (r resourceProject) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
     resp.Diagnostics.AddError("Update project", "Not implemented")
 }
 
-// Delete resource
 func (r resourceProject) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
     var project Project
 
