@@ -1,3 +1,7 @@
+/**
+ * @author Kévin Masseix <masseix.kevin@gmail.com>
+ */
+
 package nuage
 
 import (
