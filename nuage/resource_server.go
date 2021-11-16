@@ -45,12 +45,12 @@ func (r resourceServerType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
                 Type: types.StringType,
                 Required: true,
             },
-            "security_groups": {
-                Type: types.ListType{
-                    ElemType: types.StringType,
-                },
-                Optional: true,
-            },
+            // "security_groups": {
+            //     Type: types.ListType{
+            //         ElemType: types.StringType,
+            //     },
+            //     Optional: true,
+            // },
         },
     }, nil
 }
@@ -68,7 +68,35 @@ type resourceServer struct {
 
 // Create a new resource
 func (r resourceServer) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
-    resp.Diagnostics.AddError("Create Server", "Not implemented")
+    var server Server
+
+    diags := req.Plan.Get(ctx, &server)
+    resp.Diagnostics.Append(diags...)
+
+    if resp.Diagnostics.HasError() {
+        return
+    }
+
+    id, err := r.p.client.CreateServer(server)
+
+    if err != nil {
+        resp.Diagnostics.AddError("Create Server", err.Error())
+        return
+    }
+
+    // Generate resource state struct
+    var result = Server{
+        Id:             types.String{Value: id},
+        Name:           types.String{Value: server.Name.Value},
+        Description:    types.String{Value: server.Description.Value},
+        Project:        types.String{Value: server.Project.Value},
+        Flavor:         types.String{Value: server.Flavor.Value},
+        Image:          types.String{Value: server.Image.Value},
+        KeyPair:        types.String{Value: server.KeyPair.Value},
+    }
+
+    diags = resp.State.Set(ctx, result)
+    resp.Diagnostics.Append(diags...)
 }
 
 // Read resource information
@@ -84,4 +112,17 @@ func (r resourceServer) Update(ctx context.Context, req tfsdk.UpdateResourceRequ
 // Delete resource
 func (r resourceServer) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
     resp.Diagnostics.AddError("Delete Server", "Not implemented")
+}
+
+func (client *Client) CreateServer(server Server) (string, error) {
+    payload := map[string]interface{}{
+        "name":         server.Name.Value,
+        "description":  server.Description.Value,
+        "project":      server.Project.Value,
+        "flavor":       server.Flavor.Value,
+        "image":        server.Image.Value,
+        "keypair":      server.KeyPair.Value,
+    }
+
+    return client.CreateResource(API_SERVERS, payload)
 }

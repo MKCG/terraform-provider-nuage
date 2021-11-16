@@ -64,3 +64,14 @@ type SecurityRule struct {
 	PortMax		uint 			`tfsdk:"port_max"`
 	Remote		types.String 	`tfsdk:"remote"`
 }
+
+type Server struct {
+	Id				types.String 	`tfsdk:"id"`
+	Name 			types.String 	`tfsdk:"name"`
+	Description 	types.String 	`tfsdk:"description"`
+	Project 		types.String 	`tfsdk:"project"`
+	Flavor			types.String 	`tfsdk:"flavor"`
+	Image			types.String 	`tfsdk:"image"`
+	KeyPair			types.String 	`tfsdk:"keypair"`
+	// SecurityGroups	[]types.String 	`tfsdk:"security_groups"`
+}

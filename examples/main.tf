@@ -57,6 +57,7 @@ resource "nuage_server" "web" {
   project = nuage_project.project.id
   flavor  = data.nuage_flavor.web_flavor.id
   image   = data.nuage_image.web_image.id
+  keypair = nuage_keypair.keypair.id
 }
 
 # resource "nuage_project" "project-ter" {

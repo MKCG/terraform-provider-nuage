@@ -89,6 +89,7 @@ func (source imageDataSource) Read(ctx context.Context, req tfsdk.ReadDataSource
 
     for _, image := range *images {
         if image.Equals(&search) {
+            image.Id.Value = API_IMAGES + "/" + image.Id.Value
             diags = resp.State.Set(ctx, image)
             resp.Diagnostics.Append(diags...)
             return

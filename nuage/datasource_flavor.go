@@ -77,6 +77,7 @@ func (source flavorDataSource) Read(ctx context.Context, req tfsdk.ReadDataSourc
 
     for _, flavor := range *flavors {
     	if flavor.Equals(&search) {
+            flavor.Id.Value = API_FLAVORS + "/" + flavor.Id.Value
 			diags = resp.State.Set(ctx, flavor)
 			resp.Diagnostics.Append(diags...)
 			return
