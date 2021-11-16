@@ -13,6 +13,28 @@ provider "nuage" {
   organization = var.nuage_auth_organization
 }
 
+data "nuage_flavor" "web_flavor" {
+  core = 1
+  ram  = 2
+  disk = 100
+}
+
+data "nuage_flavor" "db_flavor" {
+  core = 2
+  ram  = 2
+  disk = 100
+}
+
+data "nuage_image" "web_image" {
+  os_name = "ubuntu"
+  os_version = "21.04 (Hirsute Hippo)"
+}
+
+data "nuage_image" "db_image" {
+  os_name = "ubuntu"
+  os_version = "20.04 LTS (Focal Fossa)"
+}
+
 resource "nuage_keypair" "keypair" {
   description = "ssh key"
   public_key = file("~/.ssh/id_rsa.pub")
@@ -27,6 +49,14 @@ resource "nuage_project" "project" {
 resource "nuage_project" "project-bis" {
   description = "projet infra"
   name = "infra00000000001"
+}
+
+resource "nuage_server" "web" {
+  description = "web server"
+  name    = "prod-web-1"
+  project = nuage_project.project.id
+  flavor  = data.nuage_flavor.web_flavor.id
+  image   = data.nuage_image.web_image.id
 }
 
 # resource "nuage_project" "project-ter" {

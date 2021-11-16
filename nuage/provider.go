@@ -23,6 +23,7 @@ const API_AUTH 				= "/arya/auth"
 const API_ORGANIZATIONS    	= "/arya/organizations"
 const API_PROJECTS 			= "/arya/projects"
 const API_KEYPAIRS 			= "/arya/keypairs"
+const API_FLAVORS 			= "/rockefeller/flavors"
 const API_IMAGES 			= "/rockefeller/images"
 const API_IPS 				= "/rockefeller/ips"
 const API_SECURITY_GROUPS 	= "/rockefeller/security_groups"
@@ -354,10 +355,14 @@ func (p *provider) GetResources(_ context.Context) (map[string]tfsdk.ResourceTyp
 		"nuage_project": resourceProjectType{},
 		"nuage_security_group": resourceSecurityGroupType{},
 		"nuage_security_rule": resourceSecurityRuleType{},
+		"nuage_server": resourceServerType{},
 	}, nil
 }
 
 // GetDataSources - Defines provider data sources
 func (p *provider) GetDataSources(_ context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
-	return map[string]tfsdk.DataSourceType{}, nil
+	return map[string]tfsdk.DataSourceType{
+		"nuage_flavor": flavorDataSourceType{},
+		"nuage_image": imageDataSourceType{},
+	}, nil
 }
