@@ -50,7 +50,7 @@ type SecurityGroup struct {
 	Id				types.String 	`tfsdk:"id"`
 	Name 			types.String 	`tfsdk:"name"`
 	Description 	types.String 	`tfsdk:"description"`
-	Rules			[]types.String 	`tfsdk:"rules"`
+	// Rules			[]types.String 	`tfsdk:"rules"`
 }
 
 type SecurityRule struct {
@@ -73,5 +73,5 @@ type Server struct {
 	Flavor			types.String 	`tfsdk:"flavor"`
 	Image			types.String 	`tfsdk:"image"`
 	KeyPair			types.String 	`tfsdk:"keypair"`
-	// SecurityGroups	[]types.String 	`tfsdk:"security_groups"`
+	SecurityGroups	[]types.String 	`tfsdk:"security_groups"`
 }

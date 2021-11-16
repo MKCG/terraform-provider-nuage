@@ -19,10 +19,29 @@ data "nuage_flavor" "web_flavor" {
   disk = 100
 }
 
+data "nuage_flavor" "bastion_flavor" {
+  core = 1
+  ram  = 1
+  disk = 100
+}
+
 data "nuage_flavor" "db_flavor" {
   core = 2
   ram  = 2
   disk = 100
+}
+
+data "nuage_security_group" "sg_web" {
+  name = "web"
+}
+
+data "nuage_security_group" "sg_bastion" {
+  name = "ssh"
+}
+
+data "nuage_image" "bastion_image" {
+  os_name = "ubuntu"
+  os_version = "21.04 (Hirsute Hippo)"
 }
 
 data "nuage_image" "web_image" {
@@ -51,6 +70,19 @@ resource "nuage_project" "project-bis" {
   name = "infra00000000001"
 }
 
+resource "nuage_server" "prod-bastion-1" {
+  description = "bastion server"
+  name    = "prod-bastion-1"
+  project = nuage_project.project.id
+  flavor  = data.nuage_flavor.bastion_flavor.id
+  image   = data.nuage_image.bastion_image.id
+  keypair = nuage_keypair.keypair.id
+
+  security_groups = [
+    data.nuage_security_group.sg_bastion.id
+  ]
+}
+
 resource "nuage_server" "prod-web-1" {
   description = "web server"
   name    = "prod-web-1"
@@ -58,6 +90,10 @@ resource "nuage_server" "prod-web-1" {
   flavor  = data.nuage_flavor.web_flavor.id
   image   = data.nuage_image.web_image.id
   keypair = nuage_keypair.keypair.id
+
+  security_groups = [
+    data.nuage_security_group.sg_web.id
+  ]
 }
 
 resource "nuage_server" "prod-web-2" {
@@ -67,6 +103,10 @@ resource "nuage_server" "prod-web-2" {
   flavor  = data.nuage_flavor.web_flavor.id
   image   = data.nuage_image.web_image.id
   keypair = nuage_keypair.keypair.id
+
+  security_groups = [
+    data.nuage_security_group.sg_web.id
+  ]
 }
 
 resource "nuage_server" "prod-db-1" {
@@ -79,7 +119,7 @@ resource "nuage_server" "prod-db-1" {
 }
 
 # resource "nuage_security_rule" "sec-rule" {
-#   direction = "in"
+#   direction = "ingress"
 #   protocol = "tcp"
 #   port_min = 80
 #   port_max = 80
@@ -87,7 +127,7 @@ resource "nuage_server" "prod-db-1" {
 # }
 
 # resource "nuage_security_rule" "sec-rule-bis" {
-#   direction = "in"
+#   direction = "ingress"
 #   protocol = "tcp"
 #   port_min = 443
 #   port_max = 443

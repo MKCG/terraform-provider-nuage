@@ -359,5 +359,6 @@ func (p *provider) GetDataSources(_ context.Context) (map[string]tfsdk.DataSourc
 	return map[string]tfsdk.DataSourceType{
 		"nuage_flavor": flavorDataSourceType{},
 		"nuage_image": imageDataSourceType{},
+		"nuage_security_group": securityGroupDataSourceType{},
 	}, nil
 }

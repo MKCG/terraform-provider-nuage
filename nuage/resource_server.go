@@ -46,12 +46,12 @@ func (r resourceServerType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
                 Type: types.StringType,
                 Required: true,
             },
-            // "security_groups": {
-            //     Type: types.ListType{
-            //         ElemType: types.StringType,
-            //     },
-            //     Optional: true,
-            // },
+            "security_groups": {
+                Type: types.ListType{
+                    ElemType: types.StringType,
+                },
+                Optional: true,
+            },
         },
     }, nil
 }
@@ -88,6 +88,7 @@ func (r resourceServer) Create(ctx context.Context, req tfsdk.CreateResourceRequ
         Flavor:         types.String{Value: server.Flavor.Value},
         Image:          types.String{Value: server.Image.Value},
         KeyPair:        types.String{Value: server.KeyPair.Value},
+        SecurityGroups: server.SecurityGroups,
     }
 
     diags = resp.State.Set(ctx, result)
@@ -148,13 +149,20 @@ func (r resourceServer) Delete(ctx context.Context, req tfsdk.DeleteResourceRequ
 }
 
 func (client *Client) CreateServer(server Server) (string, error) {
+    groups := []string{}
+
+    for _, group := range server.SecurityGroups {
+        groups = append(groups, group.Value)
+    }
+
     payload := map[string]interface{}{
-        "name":         server.Name.Value,
-        "description":  server.Description.Value,
-        "project":      server.Project.Value,
-        "flavor":       server.Flavor.Value,
-        "image":        server.Image.Value,
-        "keypair":      server.KeyPair.Value,
+        "name":             server.Name.Value,
+        "description":      server.Description.Value,
+        "project":          server.Project.Value,
+        "flavor":           server.Flavor.Value,
+        "image":            server.Image.Value,
+        "keypair":          server.KeyPair.Value,
+        "securityGroups":   groups,
     }
 
     return client.CreateResource(API_SERVERS, payload)
@@ -169,6 +177,14 @@ func (client *Client) GetServer(id string) (*Server, error) {
 
     project := strings.Replace(content["project"].(string), API_PROJECTS + "/", "", -1)
 
+    var groups []types.String
+
+    for _, group := range content["securityGroups"].([]interface{}) {
+        groupId := group.(map[string]interface{})["@id"].(string)
+
+        groups = append(groups, types.String{Value: groupId})
+    }
+
     server := Server{
         Id              : types.String{Value: content["id"].(string)},
         Name            : types.String{Value: content["name"].(string)},
@@ -176,6 +192,7 @@ func (client *Client) GetServer(id string) (*Server, error) {
         Project         : types.String{Value: project},
         Flavor          : types.String{Value: content["flavor"].(string)},
         Image           : types.String{Value: content["image"].(string)},
+        SecurityGroups  : groups,
         // KeyPair         : types.String{Value: content["keypair"].(string)},
     }
 
