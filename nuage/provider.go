@@ -6,9 +6,9 @@ import (
 
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -19,16 +19,16 @@ var stderr = os.Stderr
 
 const API_HOST = "https://api.nua.ge"
 
-const API_AUTH 				= "/arya/auth"
-const API_ORGANIZATIONS    	= "/arya/organizations"
-const API_PROJECTS 			= "/arya/projects"
-const API_KEYPAIRS 			= "/arya/keypairs"
-const API_FLAVORS 			= "/rockefeller/flavors"
-const API_IMAGES 			= "/rockefeller/images"
-const API_IPS 				= "/rockefeller/ips"
-const API_SECURITY_GROUPS 	= "/rockefeller/security_groups"
-const API_SECURITY_RULES 	= "/rockefeller/security_rules"
-const API_SERVERS 			= "/rockefeller/servers"
+const API_AUTH = "/arya/auth"
+const API_ORGANIZATIONS = "/arya/organizations"
+const API_PROJECTS = "/arya/projects"
+const API_KEYPAIRS = "/arya/keypairs"
+const API_FLAVORS = "/rockefeller/flavors"
+const API_IMAGES = "/rockefeller/images"
+const API_IPS = "/rockefeller/ips"
+const API_SECURITY_GROUPS = "/rockefeller/security_groups"
+const API_SECURITY_RULES = "/rockefeller/security_rules"
+const API_SERVERS = "/rockefeller/servers"
 
 type provider struct {
 	configured bool
@@ -36,41 +36,41 @@ type provider struct {
 }
 
 type Client struct {
-	organization 	string
-	name 			string
-	accessToken  	string
+	organization string
+	name         string
+	accessToken  string
 }
 
 func New() tfsdk.Provider {
 	return &provider{}
 }
 
-func (client *Client) CreateResource(api string, content map[string]interface{}) (string, error) {	
-    payload, _ := json.Marshal(content)
+func (client *Client) CreateResource(api string, content map[string]interface{}) (string, error) {
+	payload, _ := json.Marshal(content)
 
-    body, err := client.Post(api, payload)
+	body, err := client.Post(api, payload)
 
-    if err != nil {
-    	return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
-    if val, ok := body["id"]; ok {
-    	return val.(string), nil
-    }
+	if val, ok := body["id"]; ok {
+		return val.(string), nil
+	}
 
-    return "", errors.New("Id is missing")
+	return "", errors.New("Id is missing")
 }
 
-func (client* Client) Execute(req *http.Request) (*http.Response, error) {
+func (client *Client) Execute(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + client.accessToken)
+	req.Header.Set("Authorization", "Bearer "+client.accessToken)
 
 	httpClient := &http.Client{}
 	return httpClient.Do(req)
 }
 
 func (client *Client) Get(url string) (map[string]interface{}, error) {
-	req, err := http.NewRequest("GET", API_HOST + url, nil)
+	req, err := http.NewRequest("GET", API_HOST+url, nil)
 
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (client *Client) Get(url string) (map[string]interface{}, error) {
 
 	var decoded map[string]interface{}
 
-	if err = json.Unmarshal(body, &decoded) ; err != nil {
+	if err = json.Unmarshal(body, &decoded); err != nil {
 		return nil, err
 	}
 
@@ -108,7 +108,7 @@ func (client *Client) Get(url string) (map[string]interface{}, error) {
 }
 
 func (client *Client) Post(url string, payload []byte) (map[string]interface{}, error) {
-	req, err := http.NewRequest("POST", API_HOST + url, bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", API_HOST+url, bytes.NewBuffer(payload))
 
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (client *Client) Post(url string, payload []byte) (map[string]interface{}, 
 
 	var decoded map[string]interface{}
 
-	if err = json.Unmarshal(body, &decoded) ; err != nil {
+	if err = json.Unmarshal(body, &decoded); err != nil {
 		return nil, err
 	}
 
@@ -146,13 +146,13 @@ func (client *Client) Post(url string, payload []byte) (map[string]interface{}, 
 }
 
 func (client *Client) Delete(url string, id string) error {
-	req, err := http.NewRequest("DELETE", API_HOST + url + "/" + id, nil)
+	req, err := http.NewRequest("DELETE", API_HOST+url+"/"+id, nil)
 
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", "Bearer " + client.accessToken)
+	req.Header.Set("Authorization", "Bearer "+client.accessToken)
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
@@ -171,11 +171,11 @@ func (client *Client) Delete(url string, id string) error {
 func NewClient(organization *string, name *string, password *string, resp *tfsdk.ConfigureProviderResponse) (*Client, error) {
 	payload, _ := json.Marshal(map[string]string{
 		"organization": *organization,
-		"name": *name,
-		"password": *password,
+		"name":         *name,
+		"password":     *password,
 	})
 
-	auth, err := http.Post(API_HOST + API_AUTH, "application/json", bytes.NewBuffer(payload))
+	auth, err := http.Post(API_HOST+API_AUTH, "application/json", bytes.NewBuffer(payload))
 
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func NewClient(organization *string, name *string, password *string, resp *tfsdk
 
 	var decoded map[string]interface{}
 
-	if err = json.Unmarshal(body, &decoded) ; err != nil {
+	if err = json.Unmarshal(body, &decoded); err != nil {
 		return nil, err
 	}
 
@@ -211,8 +211,8 @@ func NewClient(organization *string, name *string, password *string, resp *tfsdk
 
 	return &Client{
 		organization: *organization,
-		name: *name,
-		accessToken: val.(string),
+		name:         *name,
+		accessToken:  val.(string),
 	}, nil
 }
 
@@ -240,9 +240,9 @@ func (p *provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 }
 
 type providerData struct {
-	Organization    types.String `tfsdk:"organization"`
-	Name 			types.String `tfsdk:"name"`
-	Password 		types.String `tfsdk:"password"`
+	Organization types.String `tfsdk:"organization"`
+	Name         types.String `tfsdk:"name"`
+	Password     types.String `tfsdk:"password"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
@@ -347,18 +347,18 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 
 func (p *provider) GetResources(_ context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
-		"nuage_keypair": resourceKeyPairType{},
-		"nuage_project": resourceProjectType{},
+		"nuage_keypair":        resourceKeyPairType{},
+		"nuage_project":        resourceProjectType{},
 		"nuage_security_group": resourceSecurityGroupType{},
-		"nuage_security_rule": resourceSecurityRuleType{},
-		"nuage_server": resourceServerType{},
+		"nuage_security_rule":  resourceSecurityRuleType{},
+		"nuage_server":         resourceServerType{},
 	}, nil
 }
 
 func (p *provider) GetDataSources(_ context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
 	return map[string]tfsdk.DataSourceType{
-		"nuage_flavor": flavorDataSourceType{},
-		"nuage_image": imageDataSourceType{},
+		"nuage_flavor":         flavorDataSourceType{},
+		"nuage_image":          imageDataSourceType{},
 		"nuage_security_group": securityGroupDataSourceType{},
 	}, nil
 }

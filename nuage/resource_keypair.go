@@ -1,157 +1,157 @@
 package nuage
 
 import (
-    "context"
+	"context"
 
-    "github.com/hashicorp/terraform-plugin-framework/diag"
-    "github.com/hashicorp/terraform-plugin-framework/tfsdk"
-    "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type resourceKeyPairType struct{}
 
 type resourceKeyPair struct {
-    p provider
+	p provider
 }
 
 func (r resourceKeyPairType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-    return tfsdk.Schema{
-        Attributes: map[string]tfsdk.Attribute{
-            "id": {
-                Type: types.StringType,
-                Computed: true,
-            },
-            "description": {
-                Type: types.StringType,
-                Optional: true,
-            },
-            "is_default": {
-                Type: types.BoolType,
-                Optional: true,
-            },
-            "public_key": {
-                Type: types.StringType,
-                Required: true,
-            },
-            "user": {
-                Type: types.StringType,
-                Computed: true,
-            },
-        },
-    }, nil
+	return tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"id": {
+				Type:     types.StringType,
+				Computed: true,
+			},
+			"description": {
+				Type:     types.StringType,
+				Optional: true,
+			},
+			"is_default": {
+				Type:     types.BoolType,
+				Optional: true,
+			},
+			"public_key": {
+				Type:     types.StringType,
+				Required: true,
+			},
+			"user": {
+				Type:     types.StringType,
+				Computed: true,
+			},
+		},
+	}, nil
 }
 
 func (r resourceKeyPairType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
-    return resourceKeyPair{
-        p: *(p.(*provider)),
-    }, nil
+	return resourceKeyPair{
+		p: *(p.(*provider)),
+	}, nil
 }
 
 func (r resourceKeyPair) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
-    var key KeyPair
+	var key KeyPair
 
-    diags := req.Plan.Get(ctx, &key)
-    resp.Diagnostics.Append(diags...)
+	diags := req.Plan.Get(ctx, &key)
+	resp.Diagnostics.Append(diags...)
 
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    id, err := r.p.client.CreateKeyPair(key)
+	id, err := r.p.client.CreateKeyPair(key)
 
-    if err != nil {
-        resp.Diagnostics.AddError("Create KeyPair", err.Error())
-        return
-    }
+	if err != nil {
+		resp.Diagnostics.AddError("Create KeyPair", err.Error())
+		return
+	}
 
-    var result = KeyPair{
-        Id:             types.String{Value: id},
-        Description:    types.String{Value: key.Description.Value},
-        IsDefault:      types.Bool{Value: key.IsDefault.Value},
-        PublicKey:      types.String{Value: key.PublicKey.Value},
-        User:           types.String{Value: r.p.client.name},
-    }
+	var result = KeyPair{
+		Id:          types.String{Value: id},
+		Description: types.String{Value: key.Description.Value},
+		IsDefault:   types.Bool{Value: key.IsDefault.Value},
+		PublicKey:   types.String{Value: key.PublicKey.Value},
+		User:        types.String{Value: r.p.client.name},
+	}
 
-    diags = resp.State.Set(ctx, result)
-    resp.Diagnostics.Append(diags...)
+	diags = resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r resourceKeyPair) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-    var key KeyPair
+	var key KeyPair
 
-    diags := req.State.Get(ctx, &key)
-    resp.Diagnostics.Append(diags...)
+	diags := req.State.Get(ctx, &key)
+	resp.Diagnostics.Append(diags...)
 
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    id := key.Id.Value
+	id := key.Id.Value
 
-    result, err := r.p.client.GetKeyPair(id)
+	result, err := r.p.client.GetKeyPair(id)
 
-    if err != nil {
-        resp.Diagnostics.AddError("Read KeyPair", err.Error())
-        return
-    }
+	if err != nil {
+		resp.Diagnostics.AddError("Read KeyPair", err.Error())
+		return
+	}
 
-    diags = resp.State.Set(ctx, result)
-    resp.Diagnostics.Append(diags...)
+	diags = resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r resourceKeyPair) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
-    resp.Diagnostics.AddError("Update KeyPair", "Not implemented")
+	resp.Diagnostics.AddError("Update KeyPair", "Not implemented")
 }
 
 func (r resourceKeyPair) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-    var key KeyPair
+	var key KeyPair
 
-    diags := req.State.Get(ctx, &key)
-    resp.Diagnostics.Append(diags...)
+	diags := req.State.Get(ctx, &key)
+	resp.Diagnostics.Append(diags...)
 
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    id := key.Id.Value
+	id := key.Id.Value
 
-    if err := r.p.client.DeleteKeyPair(id) ; err != nil {
-        resp.Diagnostics.AddError("Delete KeyPair", err.Error())
-        return
-    }
+	if err := r.p.client.DeleteKeyPair(id); err != nil {
+		resp.Diagnostics.AddError("Delete KeyPair", err.Error())
+		return
+	}
 
-    resp.State.RemoveResource(ctx)
+	resp.State.RemoveResource(ctx)
 }
 
 func (client *Client) CreateKeyPair(key KeyPair) (string, error) {
-    payload := map[string]interface{}{
-        "name": client.name,
-        "description": key.Description.Value,
-        "publicKey": key.PublicKey.Value,
-        "isDefault": key.IsDefault.Value,
-    }
+	payload := map[string]interface{}{
+		"name":        client.name,
+		"description": key.Description.Value,
+		"publicKey":   key.PublicKey.Value,
+		"isDefault":   key.IsDefault.Value,
+	}
 
-    return client.CreateResource(API_KEYPAIRS, payload)
+	return client.CreateResource(API_KEYPAIRS, payload)
 }
 
 func (client *Client) GetKeyPair(id string) (*KeyPair, error) {
-    content, err := client.Get(API_KEYPAIRS + "/" + id)
+	content, err := client.Get(API_KEYPAIRS + "/" + id)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    key := KeyPair{
-        Id              : types.String{Value: content["id"].(string)},
-        Description     : types.String{Value: content["description"].(string)},
-        IsDefault       : types.Bool{Value: content["isDefault"].(bool)},
-        PublicKey       : types.String{Value: content["publicKey"].(string)},
-        User            : types.String{Value: client.name},
-    }
+	key := KeyPair{
+		Id:          types.String{Value: content["id"].(string)},
+		Description: types.String{Value: content["description"].(string)},
+		IsDefault:   types.Bool{Value: content["isDefault"].(bool)},
+		PublicKey:   types.String{Value: content["publicKey"].(string)},
+		User:        types.String{Value: client.name},
+	}
 
-    return &key, nil
+	return &key, nil
 }
 
 func (client *Client) DeleteKeyPair(id string) error {
-    return client.Delete(API_KEYPAIRS, id)
+	return client.Delete(API_KEYPAIRS, id)
 }
